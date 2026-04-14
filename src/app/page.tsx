@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import {
   DndContext, DragOverlay, closestCorners, KeyboardSensor,
-  PointerSensor, useSensor, useSensors,
+  PointerSensor, useSensor, useSensors, useDroppable,
 } from "@dnd-kit/core";
 import type { DragStartEvent, DragOverEvent, DragEndEvent } from "@dnd-kit/core";
 import {
@@ -141,6 +141,58 @@ function SortableLeadCard({
           Iniciar Prospecção
         </button>
       )}
+    </div>
+  );
+}
+
+// ─── KanbanColumn (Droppable) ────────────────────────────────────────────────
+
+function KanbanColumn({
+  column, leads, onStartProspeccao, qrCodeStatus
+}: {
+  column: { id: string; title: string };
+  leads: Lead[];
+  onStartProspeccao: (id: string) => void;
+  qrCodeStatus: 'idle' | 'loading' | 'generated';
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: column.id,
+    data: { type: 'column', status: column.id },
+  });
+
+  return (
+    <div
+      className={`flex flex-col w-[280px] sm:w-[300px] h-full rounded-2xl overflow-hidden shrink-0 shadow-sm
+                 border transition-colors duration-150
+                 ${isOver ? 'bg-zinc-800/30 border-zinc-600' : 'bg-zinc-900/20 border-zinc-800/60'}`}
+    >
+      <div className="p-4 border-b border-zinc-800/60 bg-zinc-950/40
+                      flex items-center justify-between sticky top-0 z-10">
+        <h3 className="text-sm font-medium text-zinc-200 tracking-wide">{column.title}</h3>
+        <span className="text-[10px] font-mono bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full">
+          {leads.length}
+        </span>
+      </div>
+
+      <div ref={setNodeRef} className="flex-1 overflow-y-auto p-3 min-h-[120px]">
+        <SortableContext items={leads.map(l => l.id)} strategy={verticalListSortingStrategy}>
+          {leads.map(lead => (
+            <SortableLeadCard
+              key={lead.id}
+              lead={lead}
+              onStartProspeccao={onStartProspeccao}
+              qrCodeGenerated={qrCodeStatus === 'generated'}
+            />
+          ))}
+        </SortableContext>
+
+        {leads.length === 0 && (
+          <div className="h-[100px] flex items-center justify-center border-2
+                          border-dashed border-zinc-800/80 rounded-xl mt-2 text-zinc-600 text-xs">
+            Nenhum lead
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -491,40 +543,13 @@ export default function Dashboard() {
                 {KANBAN_COLUMNS.map(column => {
                   const columnLeads = leads.filter(l => l.status === column.id);
                   return (
-                    <div
+                    <KanbanColumn
                       key={column.id}
-                      id={column.id}
-                      className="flex flex-col w-[280px] sm:w-[300px] h-full bg-zinc-900/20
-                                 border border-zinc-800/60 rounded-2xl overflow-hidden shrink-0 shadow-sm"
-                    >
-                      <div className="p-4 border-b border-zinc-800/60 bg-zinc-950/40
-                                      flex items-center justify-between sticky top-0 z-10">
-                        <h3 className="text-sm font-medium text-zinc-200 tracking-wide">{column.title}</h3>
-                        <span className="text-[10px] font-mono bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full">
-                          {columnLeads.length}
-                        </span>
-                      </div>
-
-                      <div className="flex-1 overflow-y-auto p-3">
-                        <SortableContext items={columnLeads.map(l => l.id)} strategy={verticalListSortingStrategy}>
-                          {columnLeads.map(lead => (
-                            <SortableLeadCard
-                              key={lead.id}
-                              lead={lead}
-                              onStartProspeccao={handleStartProspeccao}
-                              qrCodeGenerated={qrCodeStatus === 'generated'}
-                            />
-                          ))}
-                        </SortableContext>
-
-                        {columnLeads.length === 0 && (
-                          <div className="h-[100px] flex items-center justify-center border-2
-                                          border-dashed border-zinc-800/80 rounded-xl mt-2 text-zinc-600 text-xs">
-                            Nenhum lead
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                      column={column}
+                      leads={columnLeads}
+                      onStartProspeccao={handleStartProspeccao}
+                      qrCodeStatus={qrCodeStatus}
+                    />
                   );
                 })}
               </div>
