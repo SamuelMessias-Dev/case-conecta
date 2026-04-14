@@ -184,6 +184,11 @@ export default function Dashboard() {
 
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' } | null>(null);
   const [formData, setFormData] = useState({ name: '', phone: '', sector: '' });
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const showToast = useCallback((message: string, type: 'error' | 'success') => {
     setToast({ message, type });
@@ -463,10 +468,12 @@ export default function Dashboard() {
         <main className={`flex-1 overflow-x-auto overflow-y-hidden p-6 transition-all duration-300
                           ${isSidebarOpen ? 'mr-[320px] lg:mr-[400px]' : ''}`}>
 
-          {isLoadingLeads ? (
+          {!isMounted || isLoadingLeads ? (
             <div className="flex items-center justify-center h-full gap-3 text-zinc-500">
               <Loader2 className="w-6 h-6 animate-spin" />
-              <span className="text-sm">Carregando leads do Supabase...</span>
+              <span className="text-sm">
+                {!isMounted ? "Carregando ambiente..." : "Carregando leads do Supabase..."}
+              </span>
             </div>
           ) : (
             <DndContext
@@ -532,6 +539,7 @@ export default function Dashboard() {
               </DragOverlay>
             </DndContext>
           )}
+
         </main>
 
         {/* SIDEBAR */}
