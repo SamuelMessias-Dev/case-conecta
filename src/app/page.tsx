@@ -82,6 +82,7 @@ function SortableLeadCard({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.4 : 1,
+    touchAction: 'none',
   };
 
   return (
@@ -469,6 +470,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <DndContext
+              id="kanban-dnd-context"
               sensors={sensors}
               collisionDetection={closestCorners}
               onDragStart={onDragStart}
