@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
+
 import React, { useState, useEffect, useRef, FormEvent, useCallback } from "react";
 import {
   Building2, Smartphone, QrCode, PlayCircle, Activity,
